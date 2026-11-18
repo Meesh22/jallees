@@ -352,8 +352,8 @@
               <button type="button" class="btn-sm" id="mk-paste-toggle">📋 لصق سريع</button>
             </div>
             <div id="mk-paste-box" class="paste-box" hidden>
-              <textarea id="mk-paste" placeholder="الصق الاقتباسات — كل سطر اقتباس مستقل…"></textarea>
-              <button type="button" class="btn-sm solid" id="mk-paste-apply">إضافة السطور</button>
+              <textarea id="mk-paste" placeholder="الصق الاسم أولاً، ثم الاقتباسات — أو اكتب: اسم العضو: …"></textarea>
+              <button type="button" class="btn-sm solid" id="mk-paste-apply">تعبئة الخانات</button>
             </div>
           </div>
 
@@ -837,10 +837,56 @@
 
     document.getElementById("mk-paste-apply").addEventListener("click", function () {
       const pv = document.getElementById("mk-paste");
-      const lines = pv.value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-      lines.forEach(function (l) {
-        quoteRows.push(l);
-      });
+      const lines = pv.value.replace(/\r\n?/g, "\n").split("\n");
+      let pastedName = "";
+      let nameLine = -1;
+
+      /* صيغة صريحة: «اسم العضو: فلان» أو «اسم العضو» ثم الاسم في السطر التالي */
+      for (let i = 0; i < lines.length; i++) {
+        const match = lines[i].trim().match(/^(?:اسم\s*العضو|الاسم|العضو)\s*[:：-]?\s*(.*)$/);
+        if (!match) continue;
+        pastedName = (match[1] || "").trim();
+        nameLine = i;
+        if (!pastedName) {
+          for (let j = i + 1; j < lines.length; j++) {
+            if (lines[j].trim()) {
+              pastedName = lines[j].trim();
+              if (pastedName.length <= 60) nameLine = j;
+              break;
+            }
+          }
+        }
+        break;
+      }
+
+      /* صيغة مختصرة: الاسم في أول سطر، والاقتباسات في الأسطر التالية.
+         لا نعامل السطر الأول كاسم إذا بدا اقتباساً مرقماً أو بدأ بعلامة اقتباس. */
+      if (!pastedName) {
+        const first = lines.findIndex(line => line.trim());
+        if (first >= 0) {
+          const firstText = lines[first].trim();
+          const laterText = lines.slice(first + 1).some(line => line.trim());
+          const looksLikeQuote = /^(?:[0-9٠-٩]+\s*[.)、:：-]|[•*-]|[«"“])/.test(firstText);
+          if (laterText && !looksLikeQuote && firstText.length <= 60) {
+            pastedName = firstText;
+            nameLine = first;
+          }
+        }
+      }
+
+      const pastedQuotes = lines
+        .filter((line, index) => index !== nameLine)
+        .map(line => line.trim())
+        .filter(line => line &&
+          !/^(?:اسم\s*العضو|الاسم|العضو|الاقتباسات|الاقتباس)\s*[:：-]?$/i.test(line));
+
+      if (pastedName) {
+        nameInput.value = pastedName.slice(0, 40);
+        quoteRows = pastedQuotes;
+      } else {
+        pastedQuotes.forEach(function (quote) { quoteRows.push(quote); });
+      }
+
       pv.value = "";
       document.getElementById("mk-paste-box").hidden = true;
       renderList();
@@ -848,7 +894,11 @@
     });
 
     function makeFileName() {
-      return "jalees-quote-card-" + Date.now() + ".png";
+      const memberName = (nameInput.value || "")
+        .trim()
+        .replace(/[\\/:*?"<>|\u0000-\u001F]/g, "")
+        .replace(/\s+/g, " ");
+      return "اقتباسات" + (memberName ? " " + memberName : "") + ".png";
     }
 
     document.getElementById("mk-download").addEventListener("click", function () {
