@@ -344,7 +344,7 @@
           </div>
 
           <div class="maker-field">
-            <label>الاقتباسات <span>(رتّبها بالأسهم ↑↓ — حتى 10 اقتباسات)</span></label>
+            <label>الاقتباسات <span>(النص كامل — أضف ما تشاء، والصورة تطول تلقائياً)</span></label>
             <div id="mk-list" class="mk-list"></div>
             <div class="list-actions">
               <button type="button" class="btn-sm" id="mk-add">＋ إضافة اقتباس</button>
@@ -352,7 +352,7 @@
               <button type="button" class="btn-sm" id="mk-paste-toggle">📋 لصق سريع</button>
             </div>
             <div id="mk-paste-box" class="paste-box" hidden>
-              <textarea id="mk-paste" placeholder="الصق هنا — كل سطر اقتباس…"></textarea>
+              <textarea id="mk-paste" placeholder="الصق الاقتباسات — كل سطر اقتباس مستقل…"></textarea>
               <button type="button" class="btn-sm solid" id="mk-paste-apply">إضافة السطور</button>
             </div>
           </div>
@@ -444,7 +444,7 @@
     const FOOTER_H = 108;         /* ارتفاع التذييل */
     const BODY_TOP = HEADER_H + 40;
     const MIN_H = 1350;           /* الحد الأدنى لارتفاع الصورة */
-    const MAX_H = 2600;           /* حد أقصى حتى لا تطول الصورة أكثر من اللازم */
+    const MAX_H = 32700;          /* الحد العملي الآمن لارتفاع Canvas في المتصفحات */
 
     const canvas = document.getElementById("poster");
     const ctx = canvas.getContext("2d");
@@ -461,9 +461,7 @@
     function parseQuotes() {
       return quoteRows
         .map(s => (s || "").trim())
-        .filter(s => s.length > 0)
-        .slice(0, 10)
-        .map(s => s.slice(0, 300));
+        .filter(s => s.length > 0);
     }
 
     function autoGrow(el) {
@@ -571,11 +569,20 @@
 
       for (let i = 0; i < words.length; i++) {
         const candidate = line ? line + " " + words[i] : words[i];
-        if (ctx.measureText(candidate).width <= maxWidth || !line) {
+        if (ctx.measureText(candidate).width <= maxWidth) {
           line = candidate;
         } else {
-          lines.push(line);
-          line = words[i];
+          if (line) lines.push(line);
+          line = "";
+          /* اكسر الكلمة الطويلة نفسها حتى لا تخرج عن حدود الصورة */
+          for (const char of Array.from(words[i])) {
+            if (line && ctx.measureText(line + char).width > maxWidth) {
+              lines.push(line);
+              line = char;
+            } else {
+              line += char;
+            }
+          }
         }
       }
       if (line) lines.push(line);
@@ -614,7 +621,7 @@
       const size = 30;
       const layout = computeLayout(quotes, size);
       const needed = BODY_TOP + 12 + layout.total + 36 + FOOTER_H;
-      const height = Math.min(MAX_H, Math.max(MIN_H, needed));
+      const height = Math.min(MAX_H, Math.max(MIN_H, Math.ceil(needed)));
       return { size: size, layout: layout, height: height, fits: needed <= MAX_H, grew: height > MIN_H };
     }
 
@@ -776,7 +783,7 @@
       }
       if (!pick.fits) {
         statusEl.classList.add("warn");
-        statusEl.textContent = "⚠️ الاقتباسات كثيرة جداً — احذف بعضها أو اختصر نصه.";
+        statusEl.textContent = "⚠️ تجاوز المحتوى الحد الأقصى لارتفاع صورة واحدة في المتصفح؛ قسّمه إلى بطاقتين.";
       } else if (pick.grew) {
         statusEl.textContent = "✓ جاهزة — طالت الصورة قليلاً لتتسع كل الاقتباسات دون قصّ.";
       } else {
@@ -814,7 +821,6 @@
     });
 
     document.getElementById("mk-add").addEventListener("click", function () {
-      if (quoteRows.length >= 10) return;
       quoteRows.push("");
       renderList();
       const rows = listEl.querySelectorAll("textarea");
@@ -831,9 +837,9 @@
 
     document.getElementById("mk-paste-apply").addEventListener("click", function () {
       const pv = document.getElementById("mk-paste");
-      const lines = pv.value.split("\n").map(s => s.trim()).filter(Boolean);
+      const lines = pv.value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
       lines.forEach(function (l) {
-        if (quoteRows.length < 10) quoteRows.push(l.slice(0, 300));
+        quoteRows.push(l);
       });
       pv.value = "";
       document.getElementById("mk-paste-box").hidden = true;
@@ -913,7 +919,7 @@
     }
     nameInput.addEventListener("input", onInput);
 
-    /* تحميل الشعار (النسخة ذات الخلفية الشفافة) ثم الرسم الأول */
+    /* تحميل الشعار الأصلي ثم الرسم الأول */
     logoImg = new Image();
     logoImg.onload = draw;
     logoImg.src = "assets/images/logo-quote.png";
