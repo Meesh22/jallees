@@ -46,24 +46,51 @@ function doGet(e) {
 }
 
 function doPost(e) {
-  const p = e.parameter || {};
-  const author = (p.author || "").toString().trim().slice(0, 80);
-  const book = (p.book || "").toString().trim().slice(0, 120);
-  const text = (p.text || "").toString().trim().slice(0, 800);
+  const p = (e && e.parameter) || {};
+  const author = cleanInput(p.author, 80);
+  const book = cleanInput(p.book, 120);
+  const text = cleanInput(p.text, 800);
 
-  if (!author || !text) {
+  if (author.length < 2 || text.length < 10 ||
+      String(p.author || "").length > 80 || String(p.book || "").length > 120 ||
+      String(p.text || "").length > 800) {
     return json({ ok: false, error: "missing-fields" });
   }
 
-  const now = new Date();
-  const dateText = Utilities.formatDate(now, "Asia/Riyadh", "d/M/yyyy • HH:mm");
-  const sheet = getSheet();
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(5000);
+    const now = new Date();
+    const dateText = Utilities.formatDate(now, "Asia/Riyadh", "d/M/yyyy • HH:mm");
+    const sheet = getSheet();
 
-  /* الإدراج بعد صف العناوين مباشرة => الأحدث في الأعلى */
-  sheet.insertRowAfter(1);
-  sheet.getRange(2, 1, 1, 5).setValues([[author, book, text, dateText, now.getTime()]]);
+    /* الإدراج بعد صف العناوين مباشرة => الأحدث في الأعلى */
+    sheet.insertRowAfter(1);
+    const row = sheet.getRange(2, 1, 1, 5);
+    row.setNumberFormat("@");
+    row.setValues([[
+      safeSheetText(author), safeSheetText(book), safeSheetText(text),
+      dateText, String(now.getTime())
+    ]]);
 
-  return json({ ok: true, quote: { author: author, book: book, text: text, date: dateText } });
+    return json({ ok: true, quote: { author: author, book: book, text: text, date: dateText } });
+  } catch (err) {
+    return json({ ok: false, error: "temporarily-unavailable" });
+  } finally {
+    if (lock.hasLock()) lock.releaseLock();
+  }
+}
+
+/* إزالة محارف التحكم ومنع البيانات غير الصالحة أو صيغ Sheets. */
+function cleanInput(value, maxLength) {
+  return String(value || "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .trim()
+    .slice(0, maxLength);
+}
+
+function safeSheetText(value) {
+  return /^[\s]*[=+\-@]/.test(value) ? "'" + value : value;
 }
 
 function getQuotes() {
@@ -93,7 +120,7 @@ function json(obj) {
 }
 
 /* ================================================================
- *  النسخ الاحتياطي اليومي التلقائي (حماية كاملة للاقتباسات)
+ *  النسخ الاحتياطي اليومي التلقائي للاقتباسات
  *  - makeDailyBackup  : ينشئ نسخة كاملة من الجدول في مجلد Google Drive
  *  - createBackupTrigger : تُشغَّل مرة واحدة يدوياً لتفعيل المؤقت اليومي
  * ================================================================ */

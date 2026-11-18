@@ -7,27 +7,12 @@
 
 // إعداد وضع التوافق الصارم
 'use strict';
-
-/* ==========================================================================
-   1. الإعدادات العامة ونقطة نهاية نموذج الانضمام (API Configuration)
-   ========================================================================== */
-/**
- * إذا كان لديك رابط خدمة حقيقية لاستقبال الطلبات (مثل Formspree أو Google Sheet Webhook)،
- * ضعه هنا بين علامتي التنصيص.
- * مثال: const FORM_ENDPOINT = "https://formspree.io/f/your_form_id";
- * 
- * إذا تركته فارغاً ("")، سيتعامل الموقع بصدق وشفافية تامة:
- * سيقوم بالتحقق الكامل من صحة البيانات، ثم يخبر الزائر بأن النموذج غير مربوط
- * بخدمة سحابية بعد ويوجهه فوراً للاستبيان الرسمي تجنباً لأي ادعاء شكلي.
- */
-const FORM_ENDPOINT = "";
-
-// رابط استبيان Google Forms الرسمي للنادي
+/* التسجيل يتم عبر استبيان Google Forms؛ الموقع لا يستقبل بيانات الانضمام مباشرة. */
 const OFFICIAL_SURVEY_URL = "https://forms.gle/UZY6DnS9W2X5ft9w8";
 
 
 /* ==========================================================================
-   2. مصفوفات البيانات المنظمة (Data Stores)
+   1. مصفوفات البيانات المنظمة (Data Stores)
    (يمكنك إضافة أو حذف أو تعديل العناصر هنا بسهولة تامة)
    ========================================================================== */
 
@@ -92,7 +77,7 @@ const upcomingMeetings = [
 ];
 
 /* ==========================================================================
-   3. دوال بناء وعرض المحتوى الديناميكي (Rendering Functions)
+   2. دوال بناء وعرض المحتوى الديناميكي (Rendering Functions)
    ========================================================================== */
 
 /**
@@ -204,7 +189,7 @@ function renderUpcomingMeetings() {
 }
 
 /* ==========================================================================
-   4. التعامل مع تشغيل الفيديو والنافذة المنبثقة (Video Modal)
+   3. التعامل مع تشغيل الفيديو والنافذة المنبثقة (Video Modal)
    ========================================================================== */
 
 /**
@@ -301,179 +286,7 @@ function extractYouTubeId(url) {
 
 
 /* ==========================================================================
-   5. إدارة نموذج طلب الانضمام (Form Validation & Honest Submission)
-   ========================================================================== */
-
-/**
- * تهيئة التحقق من النموذج
- */
-function setupJoinForm() {
-  const form = document.getElementById('join-club-form');
-  if (!form) return;
-
-  const nameInput = document.getElementById('fullName');
-  const phoneInput = document.getElementById('phoneNumber');
-  const submitBtn = document.getElementById('submit-btn');
-  const spinner = document.getElementById('btn-spinner');
-  const btnText = submitBtn ? submitBtn.querySelector('.btn-text') : null;
-  const statusAlert = document.getElementById('form-status-alert');
-
-  // إزالة رسائل الخطأ عند البدء في الكتابة
-  nameInput.addEventListener('input', () => clearFieldError('fullName'));
-  phoneInput.addEventListener('input', () => clearFieldError('phoneNumber'));
-
-  form.addEventListener('submit', async function(e) {
-    e.preventDefault();
-
-    // 1. التحقق من الحقول
-    const isNameValid = validateName(nameInput.value.trim());
-    const isPhoneValid = validatePhone(phoneInput.value.trim());
-
-    if (!isNameValid || !isPhoneValid) {
-      return; // توقف لوجود أخطاء
-    }
-
-    const payload = {
-      fullName: nameInput.value.trim(),
-      phoneNumber: phoneInput.value.trim(),
-      submittedAt: new Date().toISOString(),
-      source: "موقع نادي جليس القرائي"
-    };
-
-    // 2. تفعيل حالة التحميل
-    if (submitBtn) submitBtn.disabled = true;
-    if (spinner) spinner.classList.remove('hidden');
-    if (btnText) btnText.textContent = "جاري المعالجة...";
-    if (statusAlert) statusAlert.classList.add('hidden');
-
-    try {
-      // 3. التحقق مما إذا كان هناك عنوان API مهيأ
-      if (!FORM_ENDPOINT || FORM_ENDPOINT.trim() === "") {
-        // حالة الصدق والشفافية: النموذج سليم ولكنه غير مربوط بخادم
-        await simulateDelay(600); // تأخير بسيط لمحاكاة الفحص
-
-        if (statusAlert) {
-          statusAlert.className = 'form-status-alert alert-info';
-          statusAlert.innerHTML = `
-            <strong>ملاحظة هامة وشفافة:</strong><br>
-            بياناتك المدخلة صحيحة تماماً (الاسم: ${escapeHtml(payload.fullName)}، الهاتف: ${escapeHtml(payload.phoneNumber)}).<br>
-            نظراً لأن الموقع مبني بـ (HTML/CSS/JS) ولا يرتبط حالياً بخدمة استقبال بيانات (API Endpoint)، 
-            فإننا <strong>لا ندعي وصول طلبك شكلياً</strong>.<br>
-            فضلاً تفضل بالتسجيل مباشرة عبر الاستبيان المعتمد لتأكيد انضمامك:<br>
-            <a href="${OFFICIAL_SURVEY_URL}" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-block" style="margin-top:10px;">
-              فتح استبيان الانضمام المعتمد ↗
-            </a>
-          `;
-          statusAlert.classList.remove('hidden');
-        }
-
-        form.reset();
-        return;
-      }
-
-      // إذا وُجد رابط API فعلي: إرسال الطلب فعلياً
-      const response = await fetch(FORM_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        if (statusAlert) {
-          statusAlert.className = 'form-status-alert alert-success';
-          statusAlert.innerHTML = `
-            <strong>تم إرسال طلبك بنجاح!</strong><br>
-            سعداء بانضمامك يا ${escapeHtml(payload.fullName)}. سيتواصل معك فريق نادي جليس قريباً عبر الواتساب.
-          `;
-          statusAlert.classList.remove('hidden');
-        }
-        form.reset();
-      } else {
-        throw new Error('فشل إرسال الطلب من الخادم.');
-      }
-
-    } catch (error) {
-      if (statusAlert) {
-        statusAlert.className = 'form-status-alert alert-error';
-        statusAlert.innerHTML = `
-          <strong>حدث خطأ أثناء الإرسال:</strong> تعذر الاتصال بالخدمة. 
-          يرجى استخدام <a href="${OFFICIAL_SURVEY_URL}" target="_blank" style="text-decoration:underline;">استبيان الانضمام المباشر</a>.
-        `;
-        statusAlert.classList.remove('hidden');
-      }
-    } finally {
-      if (submitBtn) submitBtn.disabled = false;
-      if (spinner) spinner.classList.add('hidden');
-      if (btnText) btnText.textContent = "إرسال طلب الانضمام";
-    }
-  });
-}
-
-/**
- * التحقق من صحة الاسم
- */
-function validateName(name) {
-  if (!name || name.length < 3) {
-    showFieldError('fullName', 'يرجى إدخال اسمك الكامل (3 أحرف على الأقل).');
-    return false;
-  }
-  // التحقق من أن الاسم يحتوي على أحرف
-  const lettersRegex = /^[\u0600-\u06FFa-zA-Z\s]{3,60}$/;
-  if (!lettersRegex.test(name)) {
-    showFieldError('fullName', 'يرجى إدخال اسم صحيح بالحروف دون أرقام أو رموز خاصة.');
-    return false;
-  }
-  return true;
-}
-
-/**
- * التحقق من صحة رقم الهاتف السعودي
- * يقبل الصيغ:
- * 05xxxxxxxx
- * +9665xxxxxxxx
- * 9665xxxxxxxx
- * 5xxxxxxxx
- */
-function validatePhone(phone) {
-  if (!phone) {
-    showFieldError('phoneNumber', 'رقم الهاتف إلزامي للتواصل معك.');
-    return false;
-  }
-
-  // تنظيف الرقم من المسافات أو الواصلات
-  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
-
-  // التعبير النمطي لأرقام الجوال السعودية
-  const saudiPhoneRegex = /^((\+?966)|0)?5[0-9]{8}$/;
-
-  if (!saudiPhoneRegex.test(cleaned)) {
-    showFieldError('phoneNumber', 'يرجى إدخال رقم جوال سعودي صالح (يبدأ بـ 05 أو 9665 ومكون من 10 أرقام).');
-    return false;
-  }
-
-  return true;
-}
-
-function showFieldError(fieldId, message) {
-  const group = document.getElementById(`group-${fieldId}`);
-  const errorElem = document.getElementById(`error-${fieldId}`);
-  if (group) group.classList.add('has-error');
-  if (errorElem) errorElem.textContent = message;
-}
-
-function clearFieldError(fieldId) {
-  const group = document.getElementById(`group-${fieldId}`);
-  const errorElem = document.getElementById(`error-${fieldId}`);
-  if (group) group.classList.remove('has-error');
-  if (errorElem) errorElem.textContent = '';
-}
-
-
-/* ==========================================================================
-   6. التنقل وقائمة الجوال والتمرير (Navigation & Scroll Effects)
+   4. التنقل وقائمة الجوال والتمرير (Navigation & Scroll Effects)
    ========================================================================== */
 
 function setupNavigation() {
@@ -601,7 +414,7 @@ function setupScrollReveal() {
 
 
 /* ==========================================================================
-   7. أدوات مساعدة عامة (Helpers & Toast)
+   5. أدوات مساعدة عامة (Helpers & Toast)
    ========================================================================== */
 
 /**
@@ -632,9 +445,6 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-function simulateDelay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 /**
  * تحديث سنة حقوق النشر تلقائياً
@@ -745,7 +555,7 @@ function setupAboutProofCards() {
 }
 
 /* ==========================================================================
-   8. إقلاع وتشغيل التطبيق عند اكتمال تحميل الصفحة (Initialization)
+   6. إقلاع وتشغيل التطبيق عند اكتمال تحميل الصفحة (Initialization)
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
   // 1. تحديث السنة الحالية

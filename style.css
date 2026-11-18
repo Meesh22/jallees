@@ -2146,3 +2146,64 @@ div[class*="netlify-drawer"],
     font-size: 15px;
   }
 }
+
+/* ===== Bottom app-style tab bar (mobile only) ===== */
+.site-tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  display: none;
+  background: #14281D;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -8px 24px rgba(10, 25, 17, 0.28);
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+.site-tabbar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.site-tabbar a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 2px;
+  border-radius: 12px;
+  color: #9FADA3;
+  text-decoration: none;
+  font-size: 10.5px;
+  font-weight: 700;
+  transition: color 0.2s ease;
+}
+
+.site-tabbar .tb-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.site-tabbar a:hover {
+  color: #D8E2DB;
+}
+
+.site-tabbar a.active,
+.site-tabbar a[aria-current="page"] {
+  color: #C59B63;
+}
+
+@media (max-width: 768px) {
+  .site-tabbar {
+    display: block;
+  }
+
+  body {
+    padding-bottom: 66px;
+  }
+}

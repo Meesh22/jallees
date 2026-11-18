@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>صانع بطاقات الاقتباسات | نادي جليس القرائي</title>
+
+  <meta name="description" content="أداة داخلية لنادي جليس القرائي: أدخل اسم العضو واقتباساته فيرتّبها تلقائياً في صورة أنيقة بهوية النادي جاهزة للمشاركة.">
+  <meta name="theme-color" content="#1E3A2B">
+
+  <link rel="icon" type="image/png" href="assets/images/logo-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    body {
+      font-family: "IBM Plex Sans Arabic", sans-serif;
+      background: #F4EFE6;
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    .maker-header {
+      background: linear-gradient(150deg, #14281D 0%, #1E3A2B 60%, #24503A 100%);
+      color: #FAF6EE;
+      padding: 26px 0 34px;
+    }
+
+    .back-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 26px;
+    }
+
+    .btn-back-home {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #FAF6EE;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 9px 18px;
+      border-radius: 40px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.2s ease;
+    }
+    .btn-back-home:hover { background: rgba(255,255,255,0.16); }
+
+    .proof-header-logo { height: 46px; width: auto; display: block; }
+
+    .maker-title { font-size: 30px; font-weight: 800; margin: 10px 0 8px; }
+    .maker-lead {
+      color: #D8E2DB;
+      font-size: 15.5px;
+      max-width: 640px;
+      line-height: 1.8;
+      margin: 0;
+    }
+
+    .maker-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 34px;
+      align-items: start;
+      padding-top: 46px;
+    }
+
+    .maker-panel {
+      background: #FFFFFF;
+      border: 1px solid #E5DCC9;
+      border-radius: 18px;
+      padding: 28px 28px 24px;
+      box-shadow: 0 10px 30px rgba(20, 40, 29, 0.08);
+    }
+
+    .panel-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: #1E3A2B;
+      margin: 0 0 18px;
+    }
+
+    .maker-field { margin-bottom: 18px; }
+
+    .maker-field label {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1E3A2B;
+      margin-bottom: 7px;
+    }
+
+    .maker-field label span {
+      font-weight: 500;
+      color: #98A69D;
+      font-size: 12px;
+    }
+
+    .maker-field input,
+    .maker-field textarea {
+      width: 100%;
+      border: 1.5px solid #E2D9C6;
+      border-radius: 12px;
+      background: #FBF9F4;
+      padding: 12px 14px;
+      font-family: "IBM Plex Sans Arabic", sans-serif;
+      font-size: 14.5px;
+      color: #26332C;
+      transition: border-color 0.2s ease, background 0.2s ease;
+      resize: vertical;
+    }
+
+    .maker-field textarea { min-height: 190px; line-height: 1.9; }
+
+    /* محرر قائمة الاقتباسات */
+    .mk-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .mk-empty { color: #98A69D; font-size: 13.5px; padding: 10px 4px; }
+
+    .q-row {
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      gap: 8px;
+      align-items: start;
+      background: #FBF9F4;
+      border: 1.5px solid #E2D9C6;
+      border-radius: 12px;
+      padding: 8px 10px;
+    }
+
+    .q-num {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      margin-top: 4px;
+      border-radius: 50%;
+      background: #1E3A2B;
+      color: #FAF6EE;
+      font-size: 12.5px;
+      font-weight: 800;
+    }
+
+    .q-row textarea {
+      border: none;
+      background: transparent;
+      resize: none;
+      font-family: "IBM Plex Sans Arabic", sans-serif;
+      font-size: 14.5px;
+      color: #26332C;
+      line-height: 1.8;
+      width: 100%;
+      outline: none;
+      overflow: hidden;
+      min-height: 44px;
+    }
+
+    .q-tools { display: flex; flex-direction: column; gap: 4px; }
+
+    .q-tools button {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px;
+      color: #98A69D;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: "IBM Plex Sans Arabic", sans-serif;
+      line-height: 1.4;
+    }
+    .q-tools button:hover { background: rgba(30, 58, 43, 0.08); color: #1E3A2B; }
+    .q-tools button.q-del:hover { background: rgba(193, 85, 78, 0.12); color: #C1554E; }
+
+    .list-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+
+    .paste-box { margin-top: 12px; }
+
+    .paste-box textarea {
+      width: 100%;
+      min-height: 110px;
+      border: 1.5px dashed #C59B63;
+      border-radius: 12px;
+      background: #FFFDF8;
+      padding: 10px 12px;
+      font-family: "IBM Plex Sans Arabic", sans-serif;
+      font-size: 14px;
+      color: #26332C;
+      line-height: 1.8;
+      resize: vertical;
+      margin-bottom: 8px;
+    }
+
+    .maker-field input:focus,
+    .maker-field textarea:focus {
+      outline: none;
+      border-color: #C59B63;
+      background: #FFFFFF;
+    }
+
+    .theme-switch {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .theme-btn {
+      flex: 1;
+      border: 1.5px solid #E2D9C6;
+      background: #FBF9F4;
+      border-radius: 12px;
+      padding: 10px 8px;
+      font-family: "IBM Plex Sans Arabic", sans-serif;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #1E3A2B;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .theme-btn.active {
+      border-color: #C59B63;
+      background: rgba(197, 155, 99, 0.14);
+      color: #8C6B3F;
+    }
+
+    .maker-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .maker-status {
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 14px;
+      color: #2E7D4F;
+      min-height: 20px;
+    }
+    .maker-status.warn { color: #B3722E; }
+    .maker-status.error { color: #C1554E; }
+
+    .preview-wrap {
+      background: #FFFFFF;
+      border: 1px solid #E5DCC9;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(20, 40, 29, 0.08);
+      text-align: center;
+    }
+
+    #poster {
+      width: 100%;
+      max-width: 430px;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 14px 34px rgba(20, 40, 29, 0.16);
+      background: #F9F6F1;
+    }
+
+    .preview-hint {
+      color: #6E7B72;
+      font-size: 13px;
+      margin-top: 14px;
+      line-height: 1.8;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .btn-sm {
+      border: 1.5px solid #C59B63;
+      color: #8C6B3F;
+      background: rgba(197, 155, 99, 0.12);
+      border-radius: 30px;
+      padding: 10px 22px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: "IBM Plex Sans Arabic", sans-serif;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-sm:hover { background: rgba(197, 155, 99, 0.22); }
+    .btn-sm.solid {
+      background: #1E3A2B;
+      color: #FAF6EE;
+      border-color: #1E3A2B;
+    }
+    .btn-sm.solid:hover { background: #24503A; }
+
+    @media (max-width: 900px) {
+      .maker-layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="maker-header">
+    <div class="container">
+      <div class="back-nav-bar">
+        <a href="quotes.html" class="btn-back-home">
+          <span>← العودة إلى صفحة الاقتباسات</span>
+        </a>
+        <a href="index.html" class="site-logo">
+          <img src="assets/images/logo-on-dark.png" alt="نادي جليس القرائي" class="proof-header-logo">
+        </a>
+      </div>
+
+      <h1 class="maker-title">🎨 صانع بطاقات الاقتباسات</h1>
+      <p class="maker-lead">
+        أدخل اسم العضو واقتباساته (سطر لكل اقتباس)، وستُرتَّب تلقائياً في صورة واحدة أنيقة بهوية النادي — جاهزة للتحميل والمشاركة في واتساب والمنصات.
+      </p>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <div class="maker-layout">
+
+        <!-- لوحة الإدخال -->
+        <section class="maker-panel">
+          <h2 class="panel-title">بيانات البطاقة</h2>
+
+          <div class="maker-field">
+            <label for="mk-name">اسم العضو</label>
+            <input id="mk-name" type="text" maxlength="40" placeholder="اكتب اسم العضو هنا" autocomplete="off">
+          </div>
+
+          <div class="maker-field">
+            <label>الاقتباسات <span>(رتّبها بالأسهم ↑↓ — حتى 10 اقتباسات)</span></label>
+            <div id="mk-list" class="mk-list"></div>
+            <div class="list-actions">
+              <button type="button" class="btn-sm" id="mk-add">＋ إضافة اقتباس</button>
+              <button type="button" class="btn-sm" id="mk-smart">✨ ترتيب ذكي</button>
+              <button type="button" class="btn-sm" id="mk-paste-toggle">📋 لصق سريع</button>
+            </div>
+            <div id="mk-paste-box" class="paste-box" hidden>
+              <textarea id="mk-paste" placeholder="الصق هنا — كل سطر اقتباس…"></textarea>
+              <button type="button" class="btn-sm solid" id="mk-paste-apply">إضافة السطور</button>
+            </div>
+          </div>
+
+          <div class="theme-switch" role="group" aria-label="نمط البطاقة">
+            <button type="button" class="theme-btn active" data-theme="light">☀️ كريمي فاتح</button>
+            <button type="button" class="theme-btn" data-theme="dark">🌙 أخضر داكن</button>
+          </div>
+
+          <div class="maker-actions">
+            <button type="button" class="btn-sm solid" id="mk-demo">تجربة نموذج</button>
+            <button type="button" class="btn-sm" id="mk-clear">تفريغ الحقول</button>
+          </div>
+
+          <div class="maker-status" id="mk-status" role="status" aria-live="polite"></div>
+        </section>
+
+        <!-- المعاينة -->
+        <section class="preview-wrap">
+          <h2 class="panel-title" style="margin-bottom: 20px;">معاينة حية — تتحديث أثناء الكتابة</h2>
+
+          <canvas id="poster" width="1080" height="1350"></canvas>
+
+          <div class="btn-row">
+            <button type="button" class="btn-sm solid" id="mk-download">⬇️ تحميل الصورة</button>
+            <button type="button" class="btn-sm" id="mk-share">↗️ مشاركة</button>
+            <button type="button" class="btn-sm" id="mk-copy">📋 نسخ الصورة</button>
+          </div>
+
+          <p class="preview-hint">
+            الصورة النهائية 1080×1350 بكسل — مناسبة تماماً لمشاركة واتساب وتيليجرام وانستغرام.
+          </p>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer" style="margin-top: 60px;">
+    <div class="container text-center" style="padding-bottom: 30px;">
+      <a href="index.html" class="site-logo" style="display:inline-block; margin-bottom:16px;">
+        <img src="assets/images/logo-on-dark.png" alt="نادي جليس" class="proof-header-logo" style="height:auto;">
+      </a>
+      <p style="color:#B2BEB5; font-size:14.5px;">
+        نادي جليس القرائي • بريدة • جمعية التنمية الأهلية بالمريدسية • منطقة القصيم
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    /* ================================================================
+       صانع بطاقات الاقتباسات — رسم Canvas بهوية النادي
+       ================================================================ */
+
+    const PALETTES = {
+      light: {
+        pageBg: "#F9F6F1",
+        headerTop: "#14281D",
+        headerBottom: "#24503A",
+        nameColor: "#FAF6EE",
+        subColor: "#C59B63",
+        quoteColor: "#26332C",
+        barColor: "#C59B63",
+        separator: "rgba(30, 58, 43, 0.12)",
+        footerBg: "#14281D",
+        footerColor: "#FAF6EE",
+        footerMuted: "#B2BEB5"
+      },
+      dark: {
+        pageBg: "#122419",
+        headerTop: "#0C1810",
+        headerBottom: "#1E3A2B",
+        nameColor: "#FAF6EE",
+        subColor: "#C59B63",
+        quoteColor: "#EDE7DA",
+        barColor: "#C59B63",
+        separator: "rgba(237, 231, 218, 0.16)",
+        footerBg: "#0C1810",
+        footerColor: "#FAF6EE",
+        footerMuted: "#8C9990"
+      }
+    };
+
+    const W = 1080, H = 1350;
+    const MARGIN = 74;
+
+    const canvas = document.getElementById("poster");
+    const ctx = canvas.getContext("2d");
+
+    const nameInput = document.getElementById("mk-name");
+    const statusEl = document.getElementById("mk-status");
+    const listEl = document.getElementById("mk-list");
+    let currentTheme = "light";
+    let logoImg = null;
+
+    /* صفوف الاقتباسات القابلة للترتيب والتحرير */
+    let quoteRows = [];
+
+    function parseQuotes() {
+      return quoteRows
+        .map(s => (s || "").trim())
+        .filter(s => s.length > 0)
+        .slice(0, 10)
+        .map(s => s.slice(0, 300));
+    }
+
+    function autoGrow(el) {
+      el.style.height = "auto";
+      el.style.height = Math.max(44, el.scrollHeight) + "px";
+    }
+
+    function renderList() {
+      listEl.innerHTML = "";
+      if (quoteRows.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "mk-empty";
+        empty.textContent = "لا اقتباسات بعد — أضف واحداً أو استخدم اللصق السريع.";
+        listEl.appendChild(empty);
+      }
+
+      quoteRows.forEach(function (text, i) {
+        const row = document.createElement("div");
+        row.className = "q-row";
+
+        const num = document.createElement("span");
+        num.className = "q-num";
+        num.textContent = String(i + 1);
+        row.appendChild(num);
+
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.rows = 1;
+        ta.placeholder = "نص الاقتباس…";
+        ta.addEventListener("input", function () {
+          quoteRows[i] = ta.value;
+          autoGrow(ta);
+          onInput();
+        });
+        row.appendChild(ta);
+
+        const tools = document.createElement("div");
+        tools.className = "q-tools";
+
+        function toolBtn(label, cls, fn, aria) {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = cls;
+          b.textContent = label;
+          b.title = aria;
+          b.setAttribute("aria-label", aria);
+          b.addEventListener("click", fn);
+          tools.appendChild(b);
+        }
+
+        toolBtn("↑", "q-up", function () {
+          if (i === 0) return;
+          const t = quoteRows[i - 1];
+          quoteRows[i - 1] = quoteRows[i];
+          quoteRows[i] = t;
+          renderList();
+          draw();
+        }, "تقديم هذا الاقتباس");
+
+        toolBtn("↓", "q-down", function () {
+          if (i === quoteRows.length - 1) return;
+          const t = quoteRows[i + 1];
+          quoteRows[i + 1] = quoteRows[i];
+          quoteRows[i] = t;
+          renderList();
+          draw();
+        }, "تأخير هذا الاقتباس");
+
+        toolBtn("🗑", "q-del", function () {
+          quoteRows.splice(i, 1);
+          renderList();
+          draw();
+        }, "حذف هذا الاقتباس");
+
+        row.appendChild(tools);
+        listEl.appendChild(row);
+        autoGrow(ta);
+      });
+    }
+
+    /* ترتيب ذكي: الأطول أولاً ثم تناوب طويل/قصير لتوازن بصري متناسق */
+    function smartArrange() {
+      const filled = parseQuotes();
+      if (filled.length < 2) return;
+
+      const sorted = filled.slice().sort(function (a, b) { return b.length - a.length; });
+      const out = [];
+      let lo = 0, hi = sorted.length - 1, fromFront = true;
+
+      while (lo <= hi) {
+        out.push(fromFront ? sorted[lo++] : sorted[hi--]);
+        fromFront = !fromFront;
+      }
+
+      quoteRows = out;
+      renderList();
+      draw();
+    }
+
+    function wrapText(text, font, maxWidth) {
+      ctx.font = font;
+      const words = text.split(/\s+/);
+      const lines = [];
+      let line = "";
+
+      for (let i = 0; i < words.length; i++) {
+        const candidate = line ? line + " " + words[i] : words[i];
+        if (ctx.measureText(candidate).width <= maxWidth || !line) {
+          line = candidate;
+        } else {
+          lines.push(line);
+          line = words[i];
+        }
+      }
+      if (line) lines.push(line);
+      return lines;
+    }
+
+    function computeLayout(quotes, fontSize) {
+      const textFont = '500 ' + fontSize + 'px "Tajawal", "IBM Plex Sans Arabic", sans-serif';
+      const maxWidth = W - MARGIN * 2 - 56;
+      let y = 0;
+      const blocks = [];
+
+      for (let i = 0; i < quotes.length; i++) {
+        const lines = wrapText(quotes[i], textFont, maxWidth);
+        const lineHeight = Math.round(fontSize * 1.66);
+        const blockH = lines.length * lineHeight;
+        blocks.push({ lines: lines, lineHeight: lineHeight, height: blockH });
+        y += blockH + Math.round(fontSize * 0.95); /* مسافة بعد الاقتباس */
+      }
+
+      return { blocks: blocks, total: Math.max(0, y - Math.round(fontSize * 0.95)), textFont: textFont };
+    }
+
+    function pickFontSize(quotes) {
+      const bodyTop = 292;
+      const bodyBottom = 1236;
+      const areaH = bodyBottom - bodyTop;
+
+      for (let size = 46; size >= 26; size -= 2) {
+        const layout = computeLayout(quotes, size);
+        if (layout.total <= areaH) {
+          return { size: size, layout: layout, fits: true };
+        }
+      }
+      return { size: 26, layout: computeLayout(quotes, 26), fits: false };
+    }
+
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function draw() {
+      const p = PALETTES[currentTheme];
+      const name = (nameInput.value || "").trim().slice(0, 40);
+      const quotes = parseQuotes();
+
+      /* الخلفية العامة */
+      ctx.fillStyle = p.pageBg;
+      ctx.fillRect(0, 0, W, H);
+
+      /* ===== الترويسة ===== */
+      const headerH = 252;
+      const grad = ctx.createLinearGradient(0, 0, W * 0.4, headerH);
+      grad.addColorStop(0, p.headerTop);
+      grad.addColorStop(1, p.headerBottom);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, headerH);
+
+      /* شريط ذهبي أسفل الترويسة */
+      ctx.fillStyle = "#C59B63";
+      ctx.fillRect(0, headerH - 5, W, 5);
+
+      /* الشعار */
+      if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
+        const lw = 300;
+        const lh = Math.round(300 * logoImg.naturalHeight / logoImg.naturalWidth);
+        ctx.drawImage(logoImg, (W - lw) / 2, 34, lw, lh);
+      } else {
+        ctx.font = '800 44px "IBM Plex Sans Arabic", sans-serif';
+        ctx.fillStyle = p.nameColor;
+        ctx.textAlign = "center";
+        ctx.fillText("نادي جليس القرائي", W / 2, 82);
+      }
+
+      /* اسم العضو */
+      ctx.textAlign = "center";
+      ctx.direction = "rtl";
+      ctx.font = '700 ' + (name ? 56 : 40) + 'px "IBM Plex Sans Arabic", sans-serif';
+      ctx.fillStyle = p.nameColor;
+      ctx.fillText(name || "اسم العضو", W / 2, 172);
+
+      /* سطر وصفي */
+      const n = quotes.length;
+      const sub = n > 0
+        ? (n === 1 ? "اقتباس مميز من مكتبته القرائية" : n + " اقتباسات مميزة من مكتبته القرائية")
+        : "مجموعة اقتباسات من مكتبته القرائية";
+      ctx.font = '500 25px "IBM Plex Sans Arabic", sans-serif';
+      ctx.fillStyle = p.subColor;
+      ctx.fillText(sub, W / 2, 218);
+
+      /* ===== جسم البطاقة ===== */
+      const bodyTop = 292;
+      const bodyBottom = 1236;
+
+      /* زخرفة زوايا ذهبية */
+      ctx.strokeStyle = "rgba(197, 155, 99, 0.55)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(MARGIN, bodyTop + 46);
+      ctx.lineTo(MARGIN, bodyTop + 14);
+      ctx.lineTo(MARGIN + 46, bodyTop + 14);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(W - MARGIN - 46, bodyBottom - 14);
+      ctx.lineTo(W - MARGIN - 14, bodyBottom - 14);
+      ctx.lineTo(W - MARGIN - 14, bodyBottom - 46);
+      ctx.stroke();
+
+      if (quotes.length === 0) {
+        ctx.font = '500 30px "Tajawal", "IBM Plex Sans Arabic", sans-serif';
+        ctx.fillStyle = "rgba(30, 58, 43, 0.45)";
+        ctx.fillText("اكتب الاقتباسات لتظهر هنا…", W / 2, (bodyTop + bodyBottom) / 2);
+      }
+
+      const pick = pickFontSize(quotes);
+      let y = bodyTop + 6;
+      const textX = W - MARGIN - 26;
+
+      ctx.textAlign = "right";
+      ctx.direction = "rtl";
+
+      for (let i = 0; i < pick.layout.blocks.length; i++) {
+        const b = pick.layout.blocks[i];
+
+        /* شريط ذهبي جانبي */
+        ctx.fillStyle = p.barColor;
+        roundRect(W - MARGIN + 8, y + 4, 6, b.height - 6, 3);
+        ctx.fill();
+
+        /* نص الاقتباس */
+        ctx.font = pick.layout.textFont;
+        ctx.fillStyle = p.quoteColor;
+        for (let j = 0; j < b.lines.length; j++) {
+          ctx.fillText(b.lines[j], textX, y + b.lineHeight * (j + 1) - Math.round(b.lineHeight * 0.28));
+        }
+
+        y += b.height + Math.round(pick.size * 0.5);
+
+        /* فاصل */
+        if (i < pick.layout.blocks.length - 1) {
+          ctx.strokeStyle = p.separator;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(MARGIN + 30, y + Math.round(pick.size * 0.22));
+          ctx.lineTo(W - MARGIN - 30, y + Math.round(pick.size * 0.22));
+          ctx.stroke();
+          y += pick.size * 0.45;
+        }
+      }
+
+      /* ===== التذييل ===== */
+      const footerH = H - bodyBottom;
+      ctx.fillStyle = p.footerBg;
+      ctx.fillRect(0, bodyBottom, W, footerH);
+
+      ctx.fillStyle = "#C59B63";
+      ctx.fillRect(0, bodyBottom, W, 4);
+
+      ctx.textAlign = "center";
+      ctx.font = '700 30px "IBM Plex Sans Arabic", sans-serif';
+      ctx.fillStyle = p.footerColor;
+      ctx.fillText("نادي جليس القرائي", W / 2, bodyBottom + 58);
+
+      ctx.font = '500 21px "IBM Plex Sans Arabic", sans-serif';
+      ctx.fillStyle = p.footerMuted;
+      ctx.fillText("أصدقاء القراءة  •  منطقة القصيم", W / 2, bodyBottom + 94);
+
+      /* تحديث حالة الحجم */
+      updateStatus(quotes, pick.fits);
+    }
+
+    function updateStatus(quotes, fits) {
+      statusEl.classList.remove("warn", "error");
+      if (quotes.length === 0) {
+        statusEl.textContent = "";
+        return;
+      }
+      if (!fits) {
+        statusEl.classList.add("warn");
+        statusEl.textContent = "⚠️ الاقتباسات كثيرة أو طويلة — اختصر أو اختر أهم 6-7 لتبقى البطاقة متناسقة.";
+      } else {
+        statusEl.textContent = "✓ البطاقة جاهزة — حمّلها أو شاركها مباشرة.";
+      }
+    }
+
+    /* ===== الأزرار ===== */
+    document.querySelectorAll(".theme-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        document.querySelectorAll(".theme-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentTheme = btn.dataset.theme;
+        draw();
+      });
+    });
+
+    document.getElementById("mk-demo").addEventListener("click", function () {
+      nameInput.value = "سارة المطيري";
+      quoteRows = [
+        "«القراءة ليست ترفاً، بل جسر يُصوغ الوعي ويوسع مدارك الإنسان نحو أفق أرحب.»",
+        "«كل كتاب ننهيه يترك أثراً… الصفحات التي قرأناها لا تزال تحاورنا في أوقات السكون والاجتماعات.»",
+        "«في مجلس جليس تعلمت أن الكتاب يجمعنا، وأن الحوار يجعلنا أقرب إلى أنفسنا.»"
+      ];
+      renderList();
+      draw();
+    });
+
+    document.getElementById("mk-clear").addEventListener("click", function () {
+      nameInput.value = "";
+      quoteRows = [];
+      renderList();
+      statusEl.textContent = "";
+      draw();
+    });
+
+    document.getElementById("mk-add").addEventListener("click", function () {
+      if (quoteRows.length >= 10) return;
+      quoteRows.push("");
+      renderList();
+      const rows = listEl.querySelectorAll("textarea");
+      if (rows.length) rows[rows.length - 1].focus();
+    });
+
+    document.getElementById("mk-smart").addEventListener("click", smartArrange);
+
+    document.getElementById("mk-paste-toggle").addEventListener("click", function () {
+      const box = document.getElementById("mk-paste-box");
+      box.hidden = !box.hidden;
+      if (!box.hidden) document.getElementById("mk-paste").focus();
+    });
+
+    document.getElementById("mk-paste-apply").addEventListener("click", function () {
+      const pv = document.getElementById("mk-paste");
+      const lines = pv.value.split("\n").map(s => s.trim()).filter(Boolean);
+      lines.forEach(function (l) {
+        if (quoteRows.length < 10) quoteRows.push(l.slice(0, 300));
+      });
+      pv.value = "";
+      document.getElementById("mk-paste-box").hidden = true;
+      renderList();
+      draw();
+    });
+
+    function makeFileName() {
+      return "jalees-quote-card-" + Date.now() + ".png";
+    }
+
+    document.getElementById("mk-download").addEventListener("click", function () {
+      canvas.toBlob(function (blob) {
+        if (!blob) return;
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = makeFileName();
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000);
+      }, "image/png");
+    });
+
+    document.getElementById("mk-share").addEventListener("click", function () {
+      const files = [];
+      canvas.toBlob(function (blob) {
+        if (!blob) return;
+        files.push(new File([blob], makeFileName(), { type: "image/png" }));
+
+        if (navigator.canShare && navigator.canShare({ files: files })) {
+          navigator.share({
+            files: files,
+            title: "اقتباسات عضو — نادي جليس القرائي",
+            text: "اقتباسات من نادي جليس القرائي 📖"
+          }).catch(function () { /* ألغى المستخدم المشاركة */ });
+        } else {
+          /* لا دعم مشاركة ملفات — نحمل الصورة بدلاً من ذلك */
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = makeFileName();
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000);
+        }
+      }, "image/png");
+    });
+
+    document.getElementById("mk-copy").addEventListener("click", function () {
+      canvas.toBlob(function (blob) {
+        if (!blob || !navigator.clipboard || !window.ClipboardItem) {
+          setStatusTemp("النسخ غير مدعوم في هذا المتصفح — استخدم زر التحميل", "error");
+          return;
+        }
+        navigator.clipboard.write([new ClipboardItem({ "image/png": blob })])
+          .then(function () { setStatusTemp("✓ تم نسخ الصورة — الصقها في أي محادثة"); })
+          .catch(function () { setStatusTemp("تعذر النسخ — استخدم زر التحميل", "error"); });
+      }, "image/png");
+    });
+
+    function setStatusTemp(text, type) {
+      statusEl.classList.remove("warn", "error");
+      if (type) statusEl.classList.add(type);
+      statusEl.textContent = text;
+      clearTimeout(setStatusTemp._t);
+      setStatusTemp._t = setTimeout(function () { draw(); }, 2600);
+    }
+
+    /* تحديث حي أثناء الكتابة */
+    let debounceT = null;
+    function onInput() {
+      clearTimeout(debounceT);
+      debounceT = setTimeout(draw, 220);
+    }
+    nameInput.addEventListener("input", onInput);
+
+    /* تحميل الشعار ثم الرسم الأول */
+    logoImg = new Image();
+    logoImg.onload = draw;
+    logoImg.src = "assets/images/logo-on-dark.png";
+
+    /* ضمان جاهزية الخطوط العربية قبل الرسم */
+    if (document.fonts && document.fonts.load) {
+      Promise.all([
+        document.fonts.load('700 56px "IBM Plex Sans Arabic"'),
+        document.fonts.load('500 40px "Tajawal"'),
+        document.fonts.load('500 25px "IBM Plex Sans Arabic"')
+      ]).then(function () { draw(); }).catch(function () { draw(); });
+    }
+
+    renderList();
+    draw();
+  </script>
+</body>
+</html>
